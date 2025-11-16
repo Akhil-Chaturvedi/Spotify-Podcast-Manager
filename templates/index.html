@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Podcast Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Smart Podcast Manager</h1>
+
+        {% if not session.get('user_id') %}
+            <div class="card">
+                <h2>Welcome</h2>
+                <p>Log in with your Spotify account to automatically create and manage a smart podcast playlist.</p>
+                <a href="/login"><button>Login with Spotify</button></a>
+            </div>
+        {% else %}
+            <div class="header-bar">
+                <span>Logged in as <strong>{{ user.display_name }}</strong></span>
+                <a href="/logout">Logout</a>
+            </div>
+
+            {% if is_running %}
+                <div id="progress-card" class="card">
+                    <h2>Working...</h2>
+                    <p id="status-message">Initializing...</p>
+                    <div class="progress-bar">
+                        <div id="progress-bar-inner" class="progress-bar-inner" style="width: 0%;"></div>
+                    </div>
+                    <p>Please keep this page open. You can navigate away and come back later.</p>
+                </div>
+            {% elif not state.playlist_id %}
+                <div class="card">
+                    <h2>First-Time Setup</h2>
+                    <p>To get started, the app needs a playlist to manage. You have two options:</p>
+                    <div class="button-group">
+                        <form action="/create-playlist-and-scan" method="post" style="margin: 0;">
+                            <button type="submit">Create a New Playlist & Run First Scan</button>
+                        </form>
+                    </div>
+                    <hr>
+                    <p>Or, if you want to use an existing playlist, paste its URL or ID below.</p>
+                    <form action="/set-playlist" method="post">
+                        <input type="text" name="playlist_input" class="text-input" placeholder="Paste Spotify Playlist Link or ID">
+                        <button type="submit" class="secondary">Save & Use Existing Playlist</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="card">
+                    <h2>Controls</h2>
+                    <p>Your managed playlist is ready. Press the button to update your queue with new episodes and the next batch from your backlog.</p>
+                    <p>
+                        <strong>Next Backlog Target:</strong> 
+                        Episodes around <strong>{{ (state.current_minute if state.current_minute is not none and state.current_minute != -1 else 'the shortest') }} minutes</strong> long.
+                    </p>
+                    <div class="button-group">
+                        <form action="/start-update" method="post">
+                            <button type="submit">Update My Podcast Queue</button>
+                        </form>
+                    </div>
+                </div>
+
+                {% if state.last_batch_info %}
+                <div class="card">
+                    <h2>Last Update Summary</h2>
+                    <p><em>{{ state.last_batch_info.timestamp }}</em></p>
+                    {% if state.last_batch_info.total_count > 0 %}
+                        <ul class="stats-list">
+                            <li><strong>{{ state.last_batch_info.priority_count }}</strong> new episodes added.</li>
+                            <li><strong>{{ state.last_batch_info.backlog_count }}</strong> backlog episodes from the <strong>{{ state.last_batch_info.backlog_minute }}-minute</strong> group.</li>
+                            <li><strong>{{ state.last_batch_info.total_count }}</strong> total episodes added to your playlist.</li>
+                        </ul>
+                    {% else %}
+                        <p>No new or unplayed backlog episodes were found in the last scan.</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% if state.completed_shows %}
+                <div class="card">
+                    <h2>Completed Shows</h2>
+                    <p>These shows have no unplayed episodes and are currently skipped during scans to save time.</p>
+                     <ul class="episode-list">
+                        {% for name in state.completed_shows.values() %}
+                        <li>{{ name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if is_running %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusMessage = document.getElementById('status-message');
+            const progressBar = document.getElementById('progress-bar-inner');
+
+            const intervalId = setInterval(function() {
+                fetch('/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'idle' || data.is_done || data.is_error) {
+                            clearInterval(intervalId);
+                            if(data.is_error) {
+                                statusMessage.textContent = 'Error: ' + data.message;
+                                progressBar.style.backgroundColor = '#d9534f';
+                            } else {
+                                statusMessage.textContent = 'Update Complete! Reloading...';
+                            }
+                            // Reload the page to show the final results
+                            setTimeout(() => window.location.reload(), 2000);
+                        } else {
+                            statusMessage.textContent = data.message;
+                            let percentage = 0;
+                            if (data.total > 0) {
+                                percentage = (data.progress / data.total) * 100;
+                            }
+                            progressBar.style.width = percentage + '%';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching status:', error);
+                        statusMessage.textContent = 'Error fetching status. Please check console.';
+                        clearInterval(intervalId);
+                    });
+            }, 2000); // Check status every 2 seconds
+        });
+    </script>
+    {% endif %}
+</body>
+</html>
