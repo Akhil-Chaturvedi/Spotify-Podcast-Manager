@@ -9,36 +9,40 @@ body {
     align-items: flex-start;
     min-height: 100vh;
 }
-
 .container { max-width: 700px; width: 100%; }
-
 h1, h2 { color: #1DB954; border-bottom: 2px solid #282828; padding-bottom: 0.3em; }
 h1 { font-size: 2.5em; text-align: center; border: none; }
-
 a { color: #1DB954; text-decoration: none; }
 a:hover { text-decoration: underline; }
-
 .card { background-color: #181818; border: 1px solid #282828; border-radius: 8px; padding: 1.5em; margin-bottom: 1.5em; }
 .card h2 { margin-top: 0; font-size: 1.5em; }
 hr { border: none; height: 1px; background-color: #282828; margin: 1.5em 0; }
-
 .stats-list, .episode-list { list-style-type: none; padding-left: 0; }
 .stats-list li, .episode-list li { padding: 0.5em 0; border-bottom: 1px solid #3a3a3a; }
 .stats-list li:last-child, .episode-list li:last-child { border-bottom: none; }
 .stats-list li strong, .episode-list li strong { color: #ffffff; }
-
 .button-group { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 button, .button { background-color: #1DB954; color: #ffffff; border: none; padding: 12px 24px; border-radius: 50px; font-size: 1em; font-weight: bold; cursor: pointer; transition: background-color 0.2s; display: inline-block; text-align: center; }
 button:hover, .button:hover { background-color: #1ed760; }
 button.secondary { background-color: #535353; }
 button.secondary:hover { background-color: #737373; }
-
 .text-input { width: 100%; box-sizing: border-box; background-color: #3a3a3a; color: #e0e0e0; border: 1px solid #535353; border-radius: 4px; padding: 12px; margin-bottom: 10px; font-size: 1em; }
-
 .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.5em 1em; background-color: #181818; border: 1px solid #282828; border-radius: 8px; margin-bottom: 1.5em; }
 .header-bar span { font-size: 0.9em; }
-
-/* Progress Bar Styles */
 .progress-bar { width: 100%; background-color: #535353; border-radius: 5px; overflow: hidden; height: 20px; }
 .progress-bar-inner { height: 100%; width: 0%; background-color: #1DB954; transition: width 0.5s ease-in-out; }
 #status-message { font-style: italic; color: #b3b3b3; }
+.controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
+}
+.controls-header h2 {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+.controls-header + hr {
+    margin-top: 0.5em;
+}

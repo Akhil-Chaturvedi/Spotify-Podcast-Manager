@@ -9,7 +9,6 @@
 <body>
     <div class="container">
         <h1>Smart Podcast Manager</h1>
-
         {% if not session.get('user_id') %}
             <div class="card">
                 <h2>Welcome</h2>
@@ -21,7 +20,6 @@
                 <span>Logged in as <strong>{{ user.display_name }}</strong></span>
                 <a href="/logout">Logout</a>
             </div>
-
             {% if is_running %}
                 <div id="progress-card" class="card">
                     <h2>Working...</h2>
@@ -49,19 +47,31 @@
                 </div>
             {% else %}
                 <div class="card">
-                    <h2>Controls</h2>
+                    <div class="controls-header">
+                        <h2>Controls</h2>
+                        <a href="https://open.spotify.com/playlist/{{ state.playlist_id }}" target="_blank">Open Playlist</a>
+                    </div>
+                    <hr>
                     <p>Your managed playlist is ready. Press the button to update your queue with new episodes and the next batch from your backlog.</p>
                     <p>
-                        <strong>Next Backlog Target:</strong> 
+                        <strong>Next Backlog Target:</strong>
                         Episodes around <strong>{{ (state.current_minute if state.current_minute is not none and state.current_minute != -1 else 'the shortest') }} minutes</strong> long.
                     </p>
                     <div class="button-group">
-                        <form action="/start-update" method="post">
+                        <form action="/start-update" method="post" style="margin:0;">
                             <button type="submit">Update My Podcast Queue</button>
                         </form>
                     </div>
                 </div>
-
+                <div class="card">
+                    <h2>Settings</h2>
+                    <form action="/save-settings" method="post">
+                        <label for="min_duration" style="display: block; margin-bottom: 8px;">Skip backlog episodes shorter than (minutes):</label>
+                        <input type="number" name="min_duration" id="min_duration" value="{{ state.get('min_duration', 0) }}" min="0" class="text-input" style="width: 120px; margin-bottom: 15px;">
+                        <br>
+                        <button type="submit" class="secondary">Save Settings</button>
+                    </form>
+                </div>
                 {% if state.last_batch_info %}
                 <div class="card">
                     <h2>Last Update Summary</h2>
@@ -77,28 +87,14 @@
                     {% endif %}
                 </div>
                 {% endif %}
-                
-                {% if state.completed_shows %}
-                <div class="card">
-                    <h2>Completed Shows</h2>
-                    <p>These shows have no unplayed episodes and are currently skipped during scans to save time.</p>
-                     <ul class="episode-list">
-                        {% for name in state.completed_shows.values() %}
-                        <li>{{ name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
             {% endif %}
         {% endif %}
     </div>
-
     {% if is_running %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const statusMessage = document.getElementById('status-message');
             const progressBar = document.getElementById('progress-bar-inner');
-
             const intervalId = setInterval(function() {
                 fetch('/status')
                     .then(response => response.json())
@@ -111,7 +107,6 @@
                             } else {
                                 statusMessage.textContent = 'Update Complete! Reloading...';
                             }
-                            // Reload the page to show the final results
                             setTimeout(() => window.location.reload(), 2000);
                         } else {
                             statusMessage.textContent = data.message;
@@ -127,7 +122,7 @@
                         statusMessage.textContent = 'Error fetching status. Please check console.';
                         clearInterval(intervalId);
                     });
-            }, 2000); // Check status every 2 seconds
+            }, 2000);
         });
     </script>
     {% endif %}
